@@ -1,7 +1,7 @@
 @echo off
 
 ::DEFINE VARIABLES HERE
-set nuketoolver=v1.1.0.1-beta2
+set nuketoolver=v1.1.0.1-beta3
 ::SERVER AND SOFTWARE VARIABLES
 set server=**SERVER**
 set domain=**DOMAIN**
@@ -106,6 +106,12 @@ echo.
 call :bolayer_2
 echo Cleanup...
 RD /S /Q "C:\Program Files\Tyler Technologies\DrIncode\Services\NGS_DoctorIncodeService"
+echo.
+echo.
+echo Deleting Desktop Icons...
+DEL "%PUBLIC%\Desktop\CAD*.lnk"
+DEL "%PUBLIC%\Desktop\RMS*.lnk"
+DEL "%PUBLIC%\Desktop\Mobile Citations*.lnk"
 echo.
 echo.
 call :firewall_1
@@ -219,6 +225,9 @@ echo.
 echo Removing Log Files...
 DEL C:\PSProxInstallLog.txt
 DEL C:\PSProxUnInstallLog.txt
+DEL "%PUBLIC%\Desktop\CAD*.lnk"
+DEL "%PUBLIC%\Desktop\RMS*.lnk"
+DEL "%PUBLIC%\Desktop\Mobile Citations*.lnk"
 echo.
 echo.
 GOTO :EOF
