@@ -1,22 +1,31 @@
 @echo off
+
 ::DEFINE VARIABLES HERE
-SET server=**SERVERNAME**
-SET username=**DOMAIN\USERNAME**
-SET password=**PASSWORD**
-SET tpsver=2016.3.12
-SET tps_source="\\%server%\TPSLicense\VERSIONS\%tpsver%\Tyler Technologies\*"
+set nuketoolver=v1.1.0.0-beta1
+::SERVER AND SOFTWARE VARIABLES
+set server=**SERVERNAME**
+set domain=**DOMAIN**
+set username=**USERNAME**
+set password=**PASSWORD**
+set tpsver=2016.3.12
+set tps_source="\\%server%\TPSLicense\VERSIONS\%tpsver%\Tyler Technologies\*"
 ::PACKAGE PATHS
-SET PSAppProxyPath="\\%server%\PublicSafety\Updates\ApplicationProxy\PSAppProxy.msi"
-SET DotNetVer=4.6.2
-SET DotNetPath="\\%server%\TPSLicense\NDP462-KB3151800-x86-x64-AllOS-ENU.exe"
+set PSAppProxyPath="\\%server%\PublicSafety\Updates\ApplicationProxy\PSAppProxy.msi"
+set DotNetVer=4.6.2
+set DotNetPath="\\%server%\TPSLicense\NDP462-KB3151800-x86-x64-AllOS-ENU.exe"
+set BAT_Dir=\\dc1\scripts\
 ::WMIC VALUES
-SET bolayer=PublicSafety BO Layer (Application Proxy)
-SET ThirdParty32=Tyler Public Safety - 3rd Party Components
-SET ThirdParty64=Tyler Public Safety - 3rd Party Components 64 Bit
+set bolayer=PublicSafety BO Layer (Application Proxy)
+set ThirdParty32=Tyler Public Safety - 3rd Party Components
+set ThirdParty64=Tyler Public Safety - 3rd Party Components 64 Bit
 ::ENVIROMENTAL
-SET iconcache=%localappdata%\IconCache.db
+set iconcache=%localappdata%\IconCache.db
+
+Title TPS_NUKE %nuketoolver%
+Color f0
 
 :ask
+cls
 echo.
 echo -------------------------------------------------------------------------------
 echo       8888888888 d8b            88888888888      888	  Server: %server%
@@ -28,8 +37,8 @@ echo       888        888   X88K         888 888  888 888 88888888 888
 echo       888        888 .d8""8b.       888 Y88b 888 888 Y8b.     888
 echo       888        888 888  888       888  "Y88888 888  "Y8888  888
 echo                                              888
-echo                                         Y8b d88P
-echo                                          "Y88P"	       Nuke Tool: v1.0.6.0
+echo                                         Y8b d88P    TPS Username: %domain%\%username%
+echo                                          "Y88P"     Nuke Tool Version: %nuketoolver%
 echo -------------------------------------------------------------------------------
 echo  Enter " 1 " --^> TPS Quick Repair (includes options 5, 6, and 7)
 echo  Enter " 2 " -----^> !!! COMPLETELY NUKE TPS FROM ORBIT !!!
@@ -38,38 +47,38 @@ echo  Enter " 4 " ----------^> Install .NET Framework %DotNetVer%
 echo  Enter " 5 " ----------^> Fix ActiveX Error 457 (Reinstall BO Layer)
 echo  Enter " 6 " --------^> Disable the Windows Firewall Service
 echo  Enter " 7 " -----^> Fix Permissions on the Tyler Technologies Folder
-echo  Enter " 8 " --^> Fix Blank or Incorrect Desktop Icons
+echo  Enter " 8 " --^> Run Scripts from DC1
 echo  Enter " X " to close this window
 echo -------------------------------------------------------------------------------
 echo.
 set INPUT=
 set /P INPUT=Choice: %=%
-If /I "%INPUT%"=="1" goto repair
-If /I "%INPUT%"=="2" goto remove
-If /I "%INPUT%"=="3" goto reinstall
-If /I "%INPUT%"=="4" goto dotnet
-If /I "%INPUT%"=="5" goto bolayer
-If /I "%INPUT%"=="6" goto firewall
-If /I "%INPUT%"=="7" goto permissions
-If /I "%INPUT%"=="8" goto iconcache
-If /I "%INPUT%"=="X" goto close
+IF /I "%INPUT%"=="1" GOTO repair
+IF /I "%INPUT%"=="2" GOTO remove
+IF /I "%INPUT%"=="3" GOTO reinstall
+IF /I "%INPUT%"=="4" GOTO dotnet
+IF /I "%INPUT%"=="5" GOTO bolayer
+IF /I "%INPUT%"=="6" GOTO firewall
+IF /I "%INPUT%"=="7" GOTO permissions
+IF /I "%INPUT%"=="8" GOTO externalscripts
+IF /I "%INPUT%"=="X" GOTO close
 echo.
 echo Incorrect Input!
 TIMEOUT /T 3 /NOBREAK > NUL
-goto ask
+GOTO ask
 echo.
 
 :repair
 call :repair_1
-goto end
+GOTO end
 :repair_1
 echo.
-echo Performing Quick Repair Please Wait...
+echo PerFORming Quick Repair Please Wait...
 echo.
 echo.
 IF NOT EXIST "C:\Program Files\Tyler Technologies\" echo Tyler is not Installed!! Proceeding to reinstall...
 TIMEOUT /T 5 /NOBREAK > NUL
-IF NOT EXIST "C:\Program Files\Tyler Technologies\" goto :install
+IF NOT EXIST "C:\Program Files\Tyler Technologies\" GOTO :install
 echo Stopping DrIncode Service...
 NET STOP NGS_DoctorIncodeService
 echo.
@@ -109,7 +118,7 @@ GOTO :EOF
 
 :remove
 call :remove_1
-goto end
+GOTO end
 :remove_1
 echo.
 echo.
@@ -201,7 +210,7 @@ TIMEOUT /T 5 /NOBREAK > NUL
 RD /S /Q "C:\Program Files\Tyler Technologies\"
 echo.
 echo.
-IF EXIST "C:\Program Files\Tyler Technologies\" goto nuke_folder
+IF EXIST "C:\Program Files\Tyler Technologies\" GOTO nuke_folder
 TIMEOUT /T 3 /NOBREAK > NUL
 echo Removing INCODE ProgramData Folder...
 RD /S /Q "C:\ProgramData\INCODE\"
@@ -215,7 +224,7 @@ echo.
 GOTO :EOF
 
 :reinstall
-IF NOT EXIST "C:\Program Files\Tyler Technologies\" goto install
+IF NOT EXIST "C:\Program Files\Tyler Technologies\" GOTO install
 call :remove_1
 :install
 xcopy %tps_source% "C:\Program Files\Tyler Technologies" /s /i
@@ -233,12 +242,12 @@ echo Starting DrIncode Service...
 sc start "NGS_DoctorIncodeService"
 echo.
 echo.
-goto end
+GOTO end
 
 :dotnet
 call :dotnet_2
 TIMEOUT /T 3 /NOBREAK > NUL
-goto end
+GOTO end
 :dotnet_2
 echo.
 echo Finding Installed .NET Framework Version Please Wait...
@@ -250,12 +259,12 @@ echo Would you like to install/reinstall .NET Framework %DotNetVer%?
 echo.
 set INPUT=
 set /P INPUT=(Y/N): %=%
-If /I "%INPUT%"=="Y" goto dotnet_3
-If /I "%INPUT%"=="N" goto :EOF
+IF /I "%INPUT%"=="Y" GOTO dotnet_3
+IF /I "%INPUT%"=="N" GOTO :EOF
 echo.
 echo Incorrect Input!
 TIMEOUT /T 3 /NOBREAK > NUL
-goto ask_2
+GOTO ask_2
 :dotnet_3
 echo.
 echo Installing .NET Framework %DotNetVer%...
@@ -268,7 +277,7 @@ GOTO :EOF
 call :bolayer_1
 call :bolayer_2
 TIMEOUT /T 3 /NOBREAK > NUL
-goto end
+GOTO end
 :bolayer_1
 echo.
 echo Removing PublicSafety BO Layer...
@@ -286,7 +295,7 @@ GOTO :EOF
 :firewall
 call :firewall_1
 TIMEOUT /T 3 /NOBREAK > NUL
-goto end
+GOTO end
 :firewall_1
 echo.
 echo Stopping Windows Firewall Service...
@@ -301,11 +310,11 @@ GOTO :EOF
 
 :permissions
 call :permissions_1
-goto end
+GOTO end
 :permissions_1
 echo.
 echo Running Checks...
-IF EXIST "C:\Program Files\Tyler Technologies\" goto :permissions_2
+IF EXIST "C:\Program Files\Tyler Technologies\" GOTO :permissions_2
 echo.
 echo TYLER IS NOT INSTALLED!
 echo.
@@ -324,36 +333,41 @@ echo.
 TIMEOUT /T 5 /NOBREAK > NUL
 GOTO :EOF
 
-:iconcache
+:externalscripts
+Setlocal ENABLEDELAYEDEXPANSION
+:buildmenu
+set /A MAXITEM=0
+FOR /f "delims=" %%M in ('"dir /b /a-d "%BAT_Dir%""') do (
+	set /A MAXITEM=!MAXITEM!+1
+	set MENUITEM!MAXITEM!=%%M
+)
+:showmenu
+cls
+echo -------------------------------------------------------------------------------
+echo                                 DC1 SCRIPTS
+echo -------------------------------------------------------------------------------
+set CHOICE=0
+FOR /L %%I in (1,1,!MAXITEM!) do echo    %%I. !MENUITEM%%I!
 echo.
-echo The Explorer process must be killed to delete the Icon DB... 
+set /P CHOICE="Select script to run or choose "X" to return to main menu: "
 echo.
-echo Please SAVE ALL OPEN WORK before continuing!!
+IF %CHOICE%==x GOTO end
+IF %CHOICE%==X GOTO end
+IF %CHOICE% Gtr !MAXITEM! GOTO showmenu
+IF %CHOICE%==0 GOTO showmenu
+:callbat
+FOR /f "delims=" %%S in ("!MENUITEM%CHOICE%!") Do set SCRIPTNAME=%%S
+echo calling Script "%SCRIPTNAME%"
 echo.
-pause
-echo.
-If exist "%iconcache%" goto delID
-echo.
-echo Icon DB has already been deleted...
-goto end
-
-:delID
-echo Attempting to delete Icon DB...
-ie4uinit.exe -ClearIconCache
-echo.
-echo.
-taskkill /IM explorer.exe /F 
-echo.
-echo.
-del "%iconcache%" /A
-echo.
-echo.
-start explorer.exe
-echo.
-echo.
-goto end
+set /P YESNO="Are you sure (Y/N): "
+IF NOT %YESNO%==y IF NOT %YESNO%==Y GOTO showmenu
+cls
+call "%BAT_Dir%%SCRIPTNAME%"
+GOTO showmenu
 
 :end
+Setlocal DISABLEDELAYEDEXPANSION
+cls
 echo -------------------------------------------------------------------------------
 echo                                 FINISHED
 echo -------------------------------------------------------------------------------
@@ -362,7 +376,7 @@ echo.
 echo.
 echo.
 TIMEOUT /T 5 /NOBREAK > NUL
-goto ask
+GOTO ask
 
 :restart
 echo Restarting Machine...
@@ -374,8 +388,8 @@ echo Would you restart this machine?
 echo.
 set INPUT=
 set /P INPUT=(Y/N): %=%
-If /I "%INPUT%"=="Y" goto restart
-If /I "%INPUT%"=="N" goto :close_2
+IF /I "%INPUT%"=="Y" GOTO restart
+IF /I "%INPUT%"=="N" GOTO :close_2
 echo.
 echo Incorrect Input!
 TIMEOUT /T 3 /NOBREAK > NUL
