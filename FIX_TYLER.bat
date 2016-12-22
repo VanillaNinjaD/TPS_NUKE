@@ -1,7 +1,7 @@
 @echo off
 
 ::DEFINE VARIABLES HERE
-set nuketoolver=v1.1.0.1-beta3
+set nuketoolver=v1.1.0.1-beta4
 ::SERVER AND SOFTWARE VARIABLES
 set server=**SERVER**
 set domain=**DOMAIN**
@@ -13,7 +13,7 @@ set tps_source="\\%server%\TPSLicense\VERSIONS\%tpsver%\Tyler Technologies\*"
 set PSAppProxyPath="\\%server%\PublicSafety\Updates\ApplicationProxy\PSAppProxy.msi"
 set DotNetVer=4.6.2
 set DotNetPath="\\%server%\TPSLicense\NDP462-KB3151800-x86-x64-AllOS-ENU.exe"
-set BAT_Dir=\\dc1\scripts\
+set BatchDir=\\dc1\scripts\
 ::WMIC VALUES
 set bolayer=PublicSafety BO Layer (Application Proxy)
 set ThirdParty32=Tyler Public Safety - 3rd Party Components
@@ -47,7 +47,7 @@ echo  Enter " 4 " ----------^> Install .NET Framework %DotNetVer%
 echo  Enter " 5 " ----------^> Fix ActiveX Error 457 (Reinstall BO Layer)
 echo  Enter " 6 " --------^> Disable the Windows Firewall Service
 echo  Enter " 7 " -----^> Fix Permissions on the Tyler Technologies Folder
-echo  Enter " 8 " --^> Run Scripts from DC1
+echo  Enter " 8 " --^> Run Scripts from "%BatchDir%"
 echo  Enter " X " to close this window
 echo -------------------------------------------------------------------------------
 echo.
@@ -346,7 +346,7 @@ GOTO :EOF
 Setlocal ENABLEDELAYEDEXPANSION
 :buildmenu
 set /A MAXITEM=0
-FOR /f "delims=" %%M in ('"dir /b /a-d "%BAT_Dir%*.bat""') do (
+FOR /f "delims=" %%M in ('"dir /b /a-d "%BatchDir%*.bat""') do (
 	set /A MAXITEM=!MAXITEM!+1
 	set MENUITEM!MAXITEM!=%%M
 )
@@ -371,7 +371,7 @@ echo.
 set /P YESNO="Are you sure (Y/N): "
 IF NOT %YESNO%==y IF NOT %YESNO%==Y GOTO showmenu
 cls
-call "%BAT_Dir%%SCRIPTNAME%"
+call "%BatchDir%%SCRIPTNAME%"
 GOTO showmenu
 
 :end
