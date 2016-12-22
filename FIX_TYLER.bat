@@ -1,9 +1,9 @@
 @echo off
 
 ::DEFINE VARIABLES HERE
-set nuketoolver=v1.1.0.1-beta1
+set nuketoolver=v1.1.0.1-beta2
 ::SERVER AND SOFTWARE VARIABLES
-set server=**SERVERNAME**
+set server=**SERVER**
 set domain=**DOMAIN**
 set username=**USERNAME**
 set password=**PASSWORD**
@@ -73,7 +73,7 @@ call :repair_1
 GOTO end
 :repair_1
 echo.
-echo PerFORming Quick Repair Please Wait...
+echo Performing Quick Repair Please Wait...
 echo.
 echo.
 IF NOT EXIST "C:\Program Files\Tyler Technologies\" echo Tyler is not Installed!! Proceeding to reinstall...
@@ -101,7 +101,7 @@ echo.
 echo.
 :repair_2
 echo Installing DrIncode Service...
-"C:\Program Files\Tyler Technologies\DrIncode\InstallUtil\DynamicInstallUtil.exe" -n "NGS_DoctorIncodeService" -d "C:\Program Files\Tyler Technologies\DrIncode" -a Foundation.DoctorIncode.WinServiceHost.exe -t User -u %username% -p %password%
+"C:\Program Files\Tyler Technologies\DrIncode\InstallUtil\DynamicInstallUtil.exe" -n "NGS_DoctorIncodeService" -d "C:\Program Files\Tyler Technologies\DrIncode" -a Foundation.DoctorIncode.WinServiceHost.exe -t User -u %domain%\%username% -p %password%
 echo.
 call :bolayer_2
 echo Cleanup...
