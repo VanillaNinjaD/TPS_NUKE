@@ -1,7 +1,7 @@
 @echo off
 
 ::DEFINE VARIABLES HERE
-set nuketoolver=v1.1.0.0-beta1
+set nuketoolver=v1.1.0.1-beta1
 ::SERVER AND SOFTWARE VARIABLES
 set server=**SERVERNAME**
 set domain=**DOMAIN**
@@ -337,7 +337,7 @@ GOTO :EOF
 Setlocal ENABLEDELAYEDEXPANSION
 :buildmenu
 set /A MAXITEM=0
-FOR /f "delims=" %%M in ('"dir /b /a-d "%BAT_Dir%""') do (
+FOR /f "delims=" %%M in ('"dir /b /a-d "%BAT_Dir%*.bat""') do (
 	set /A MAXITEM=!MAXITEM!+1
 	set MENUITEM!MAXITEM!=%%M
 )
