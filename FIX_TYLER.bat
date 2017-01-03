@@ -1,7 +1,7 @@
 @echo off
 
 ::DEFINE VARIABLES HERE
-set nuketoolver=v1.1.0.1-beta4
+set nuketoolver=v1.1.0.1-beta5
 ::SERVER AND SOFTWARE VARIABLES
 set server=**SERVER**
 set domain=**DOMAIN**
@@ -391,6 +391,7 @@ GOTO ask
 echo Restarting Machine...
 TIMEOUT /T 5 /NOBREAK > NUL
 shutdown -r -t 0
+TIMEOUT /T 30 /NOBREAK > NUL
 
 :close
 echo Would you restart this machine? 
