@@ -1,13 +1,14 @@
 @echo off
 
 ::DEFINE VARIABLES HERE
-set nuketoolver=v1.1.0.1-beta5
+set nuketoolver=v1.1.0.1-beta6
 ::SERVER AND SOFTWARE VARIABLES
 set server=**SERVER**
 set domain=**DOMAIN**
 set username=**USERNAME**
 set password=**PASSWORD**
 set tpsver=2016.3.12
+set drincode="\\dc1\Tyler\DrIncodeClientSetup.exe"
 set tps_source="\\%server%\TPSLicense\VERSIONS\%tpsver%\Tyler Technologies\*"
 ::PACKAGE PATHS
 set PSAppProxyPath="\\%server%\PublicSafety\Updates\ApplicationProxy\PSAppProxy.msi"
@@ -42,7 +43,7 @@ echo                                          "Y88P"     Nuke Tool Version: %nuk
 echo -------------------------------------------------------------------------------
 echo  Enter " 1 " --^> TPS Quick Repair (includes options 5, 6, and 7)
 echo  Enter " 2 " -----^> !!! COMPLETELY NUKE TPS FROM ORBIT !!!
-echo  Enter " 3 " --------^> Reinstall TPS (includes option 2, 4, 5, 6 and 7)
+echo  Enter " 3 " --------^> Install TPS (includes option 2, 4, 5, 6 and 7)
 echo  Enter " 4 " ----------^> Install .NET Framework %DotNetVer%
 echo  Enter " 5 " ----------^> Fix ActiveX Error 457 (Reinstall BO Layer)
 echo  Enter " 6 " --------^> Disable the Windows Firewall Service
@@ -55,7 +56,7 @@ set INPUT=
 set /P INPUT=Choice: %=%
 IF /I "%INPUT%"=="1" GOTO repair
 IF /I "%INPUT%"=="2" GOTO remove
-IF /I "%INPUT%"=="3" GOTO reinstall
+IF /I "%INPUT%"=="3" GOTO install
 IF /I "%INPUT%"=="4" GOTO dotnet
 IF /I "%INPUT%"=="5" GOTO bolayer
 IF /I "%INPUT%"=="6" GOTO firewall
@@ -116,10 +117,7 @@ echo.
 echo.
 call :firewall_1
 call :permissions_1
-echo Starting DrIncode Service...
-sc start "NGS_DoctorIncodeService"
-echo.
-echo.
+call :startservice
 GOTO :EOF
 
 :remove
@@ -227,31 +225,60 @@ DEL C:\PSProxInstallLog.txt
 DEL C:\PSProxUnInstallLog.txt
 DEL "%PUBLIC%\Desktop\CAD*.lnk"
 DEL "%PUBLIC%\Desktop\RMS*.lnk"
+DEL "%PUBLIC%\Desktop\Mobile CAD*.lnk"
 DEL "%PUBLIC%\Desktop\Mobile Citations*.lnk"
 echo.
 echo.
 GOTO :EOF
 
-:reinstall
-IF NOT EXIST "C:\Program Files\Tyler Technologies\" GOTO install
-call :remove_1
 :install
+echo Is this a new Tyler install? 
+echo.
+set INPUT=
+set /P INPUT=(Y/N): %=%
+IF /I "%INPUT%"=="Y" GOTO install_2
+IF /I "%INPUT%"=="N" GOTO reinstall
+:install_2
+start /wait cmd /c %drincode%
+TIMEOUT /T 30 /NOBREAK > NUL
+call :stopservice
+TIMEOUT /T 3 /NOBREAK > NUL
+cls
+call :dotnet_2
+call :bolayer_2
+call :firewall_1
+call :startservice
+GOTO end
+
+:reinstall
+IF NOT EXIST "C:\Program Files\Tyler Technologies\" GOTO reinstall_2
+call :remove_1
+:reinstall_2
 xcopy %tps_source% "C:\Program Files\Tyler Technologies" /s /i
 echo.
 echo.
 TIMEOUT /T 3 /NOBREAK > NUL
+:reinstall_3
 call :dotnet_2
 call :repair_2
 TIMEOUT /T 10 /NOBREAK > NUL
+call :stopservice
+call :startservice
+GOTO end
+
+:stopservice
 echo Stopping DrIncode Service...
 sc stop "NGS_DoctorIncodeService"
 echo.
 echo.
+GOTO :EOF
+
+:startservice
 echo Starting DrIncode Service...
 sc start "NGS_DoctorIncodeService"
 echo.
 echo.
-GOTO end
+GOTO :EOF
 
 :dotnet
 call :dotnet_2
