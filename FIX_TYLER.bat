@@ -1,24 +1,30 @@
 @echo off
 
 ::DEFINE VARIABLES HERE
-set nuketoolver=v1.1.0.1-beta6
+set nuketoolver=v1.2.0.0-beta1
+
 ::SERVER AND SOFTWARE VARIABLES
-set server=**SERVER**
+set appserver=**APPSERVER**
+set sqlserver=**SQLSERVER**
+set share=TPSLicense
 set domain=**DOMAIN**
 set username=**USERNAME**
 set password=**PASSWORD**
-set tpsver=2016.3.12
-set drincode="\\dc1\Tyler\DrIncodeClientSetup.exe"
-set tps_source="\\%server%\TPSLicense\VERSIONS\%tpsver%\Tyler Technologies\*"
+set tpsver=2016.4.17
+set drincode="\\%sqlserver%\%share%\DrIncodeClientSetup.exe"
+set tps_source="\\%sqlserver%\%share%\VERSIONS\%tpsver%\Tyler Technologies\*"
+
 ::PACKAGE PATHS
-set PSAppProxyPath="\\%server%\PublicSafety\Updates\ApplicationProxy\PSAppProxy.msi"
+set PSAppProxyPath="\\%appserver%\PublicSafety\Updates\ApplicationProxy\PSAppProxy.msi"
 set DotNetVer=4.6.2
-set DotNetPath="\\%server%\TPSLicense\NDP462-KB3151800-x86-x64-AllOS-ENU.exe"
+set DotNetPath="\\%sqlserver%\%share%\NDP462-KB3151800-x86-x64-AllOS-ENU.exe"
 set BatchDir=\\dc1\scripts\
+
 ::WMIC VALUES
 set bolayer=PublicSafety BO Layer (Application Proxy)
 set ThirdParty32=Tyler Public Safety - 3rd Party Components
 set ThirdParty64=Tyler Public Safety - 3rd Party Components 64 Bit
+
 ::ENVIROMENTAL
 set iconcache=%localappdata%\IconCache.db
 
@@ -29,8 +35,8 @@ Color f0
 cls
 echo.
 echo -------------------------------------------------------------------------------
-echo       8888888888 d8b            88888888888      888	  Server: %server%
-echo       888        Y8P                888          888	     TPS: %tpsver%
+echo       8888888888 d8b            88888888888      888	APP Svr: %appserver%
+echo       888        Y8P                888          888	SQL Svr: %sqlserver%
 echo       888                           888          888
 echo       8888888    888 888  888       888 888  888 888  .d88b.  888d888
 echo       888        888 `Y8bd8P'       888 888  888 888 d8P  Y8b 888P"
@@ -322,6 +328,13 @@ echo.
 echo.
 GOTO :EOF
 :bolayer_2
+echo Is this a MobileCAD Machine?
+echo.
+set INPUT=
+set /P INPUT=(Y/N): %=%
+IF /I "%INPUT%"=="Y" GOTO :EOF
+IF /I "%INPUT%"=="N" GOTO bolayer_3
+:bolayer_3
 echo Installing PublicSafety BO Layer...
 msiexec.exe /passive /package %PSAppProxyPath%
 echo.
