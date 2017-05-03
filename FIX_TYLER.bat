@@ -1,62 +1,102 @@
 @echo off
+set nuketoolver=v2.0.0.0-beta1
 
-::DEFINE VARIABLES HERE
-set nuketoolver=v1.2.0.0-beta1
-
-::SERVER AND SOFTWARE VARIABLES
-set appserver=**APPSERVER**
-set sqlserver=**SQLSERVER**
-set share=TPSLicense
-set domain=**DOMAIN**
-set username=**USERNAME**
-set password=**PASSWORD**
-set tpsver=2016.4.17
-set drincode="\\%sqlserver%\%share%\DrIncodeClientSetup.exe"
-set tps_source="\\%sqlserver%\%share%\VERSIONS\%tpsver%\Tyler Technologies\*"
-
-::PACKAGE PATHS
-set PSAppProxyPath="\\%appserver%\PublicSafety\Updates\ApplicationProxy\PSAppProxy.msi"
-set DotNetVer=4.6.2
-set DotNetPath="\\%sqlserver%\%share%\NDP462-KB3151800-x86-x64-AllOS-ENU.exe"
-set BatchDir=\\dc1\scripts\
-
-::WMIC VALUES
-set bolayer=PublicSafety BO Layer (Application Proxy)
-set ThirdParty32=Tyler Public Safety - 3rd Party Components
-set ThirdParty64=Tyler Public Safety - 3rd Party Components 64 Bit
-
-::ENVIROMENTAL
-set iconcache=%localappdata%\IconCache.db
+pushd %~dp0
+set pwd=%~dp0
 
 Title TPS_NUKE %nuketoolver%
 Color f0
 
+::CHECK FOR LOCAL CONFIG FILE
+set ININAME=nuke_config.ini
+IF NOT EXIST "%~dp0%ininame%" GOTO :set_default_values
+
+rem %0 is the script file name (with path), %~0 removes the surrounding " " ("%~0" == %0)
+rem Adding dp returns the drive and path to the file, instead of the file name itself
+set INISTATUS=Present
+set INIFILE="%~dp0%ininame%"
+call:getvalue %INIFILE% "appserver" "" APPSERVER
+call:getvalue %INIFILE% "sqlserver" "" SQLSERVER
+call:getvalue %INIFILE% "domain" "" DOMAIN
+call:getvalue %INIFILE% "tpsuser" "" TPSUSER
+call:getvalue %INIFILE% "tpspass" "" TPSPASS
+call:getvalue %INIFILE% "tpsver" "" TPSVER
+call:getvalue %INIFILE% "drincode" "" DRINCODE
+call:getvalue %INIFILE% "tpssource" "" TPSSOURCE
+call:getvalue %INIFILE% "PSAppProxyPath" "" PSAPPPROXYPATH
+call:getvalue %INIFILE% "DotNetVer" "" DOTNETVER
+call:getvalue %INIFILE% "DotNetPath" "" DOTNETPATH
+call:getvalue %INIFILE% "BatchDir" "" BATCHDIR
+call:getvalue %INIFILE% "bolayer" "" BOLAYER
+call:getvalue %INIFILE% "ThirdParty32" "" THIRDPARTY32
+call:getvalue %INIFILE% "ThirdParty64" "" THIRDPARTY64
+call:getvalue %INIFILE% "iconcache" "" ICONCACHE
+goto:ask
+
+:getvalue
+rem This function reads a value from an INI file and stored it in a variable
+rem %1 = name of ini file to search in.
+rem %2 = search term to look for
+rem %3 = group name (not currently used)
+rem %4 = variable to place search result
+FOR /F "eol=; eol=[ tokens=1,2* delims==" %%i in ('findstr /b /l /i %~2= %1') DO set %~4=%%~j
+goto:eof
+
+:set_default_values
+set INIFILE=%ininame%
+set INISTATUS=Not Present
+
+set appserver=**APPSERVER**
+set sqlserver=**SQLSERVER**
+set domain=m**DOMAIN**
+set tpsuser=**USERNAME**
+set tpspass=**PASSWORD**
+set tpsver=2016.4.17
+set drincode="DrIncodeClientSetup.exe"
+set tpssource="Tyler Technologies\*"
+set PSAppProxyPath="PSAppProxy.msi"
+set DotNetVer=4.6.2
+set DotNetPath="NDP462-KB3151800-x86-x64-AllOS-ENU.exe"
+set BatchDir=scripts\
+set bolayer=PublicSafety BO Layer (Application Proxy)
+set ThirdParty32=Tyler Public Safety - 3rd Party Components
+set ThirdParty64=Tyler Public Safety - 3rd Party Components 64 Bit
+set iconcache=%localappdata%\IconCache.db
+
 :ask
 cls
+MODE CON:COLS=90 LINES=35
 echo.
-echo -------------------------------------------------------------------------------
-echo       8888888888 d8b            88888888888      888	APP Svr: %appserver%
-echo       888        Y8P                888          888	SQL Svr: %sqlserver%
-echo       888                           888          888
-echo       8888888    888 888  888       888 888  888 888  .d88b.  888d888
-echo       888        888 `Y8bd8P'       888 888  888 888 d8P  Y8b 888P"
-echo       888        888   X88K         888 888  888 888 88888888 888
-echo       888        888 .d8""8b.       888 Y88b 888 888 Y8b.     888
-echo       888        888 888  888       888  "Y88888 888  "Y8888  888
-echo                                              888
-echo                                         Y8b d88P    TPS Username: %domain%\%username%
-echo                                          "Y88P"     Nuke Tool Version: %nuketoolver%
-echo -------------------------------------------------------------------------------
-echo  Enter " 1 " --^> TPS Quick Repair (includes options 5, 6, and 7)
-echo  Enter " 2 " -----^> !!! COMPLETELY NUKE TPS FROM ORBIT !!!
-echo  Enter " 3 " --------^> Install TPS (includes option 2, 4, 5, 6 and 7)
-echo  Enter " 4 " ----------^> Install .NET Framework %DotNetVer%
-echo  Enter " 5 " ----------^> Fix ActiveX Error 457 (Reinstall BO Layer)
-echo  Enter " 6 " --------^> Disable the Windows Firewall Service
-echo  Enter " 7 " -----^> Fix Permissions on the Tyler Technologies Folder
-echo  Enter " 8 " --^> Run Scripts from "%BatchDir%"
-echo  Enter " X " to close this window
-echo -------------------------------------------------------------------------------
+echo -----------------------------------------------------------------------------------------
+echo            8888888888 d8b            88888888888      888	APP Svr: %appserver%
+echo            888        Y8P                888          888	SQL Svr: %sqlserver%
+echo            888                           888          888
+echo            8888888    888 888  888       888 888  888 888  .d88b.  888d888
+echo            888        888 `Y8bd8P'       888 888  888 888 d8P  Y8b 888P"
+echo            888        888   X88K         888 888  888 888 88888888 888
+echo            888        888 .d8""8b.       888 Y88b 888 888 Y8b.     888
+echo            888        888 888  888       888  "Y88888 888  "Y8888  888
+echo                                                   888
+echo                                              Y8b d88P
+echo                                               "Y88P"
+echo               Config: %ininame%
+echo          Config File: %inistatus%
+echo            NUKE_USER: %username%
+echo             NUKE_DIR: %cd%
+echo             TPS User: %domain%\%tpsuser%
+echo         Nuke Version: %nuketoolver%
+echo -----------------------------------------------------------------------------------------
+echo       Enter " 1 " --^> TPS Quick Repair (includes options 5, 6, and 7)
+echo       Enter " 2 " -----^> !!! COMPLETELY NUKE TPS FROM ORBIT !!!
+echo       Enter " 3 " --------^> Install TPS (includes option 4, 5, 6 and 7)
+echo       Enter " 4 " ----------^> Install .NET Framework %DotNetVer%
+echo       Enter " 5 " ------------^> Restart DrIncode Service (update credentials)
+echo       Enter " 6 " ----------^> Fix ActiveX Error 457 (Reinstall BO Layer)
+echo       Enter " 7 " --------^> Disable the Windows Firewall Service
+echo       Enter " 8 " -----^> Fix Permissions on the Tyler Technologies Folder
+echo       Enter " 9 " --^> Run Scripts from "%BatchDir%"
+echo       Enter " X " to close this window
+echo -----------------------------------------------------------------------------------------
 echo.
 set INPUT=
 set /P INPUT=Choice: %=%
@@ -64,10 +104,11 @@ IF /I "%INPUT%"=="1" GOTO repair
 IF /I "%INPUT%"=="2" GOTO remove
 IF /I "%INPUT%"=="3" GOTO install
 IF /I "%INPUT%"=="4" GOTO dotnet
-IF /I "%INPUT%"=="5" GOTO bolayer
-IF /I "%INPUT%"=="6" GOTO firewall
-IF /I "%INPUT%"=="7" GOTO permissions
-IF /I "%INPUT%"=="8" GOTO externalscripts
+IF /I "%INPUT%"=="5" GOTO restart_drincode
+IF /I "%INPUT%"=="6" GOTO bolayer
+IF /I "%INPUT%"=="7" GOTO firewall
+IF /I "%INPUT%"=="8" GOTO permissions
+IF /I "%INPUT%"=="9" GOTO externalscripts
 IF /I "%INPUT%"=="X" GOTO close
 echo.
 echo Incorrect Input!
@@ -86,10 +127,7 @@ echo.
 IF NOT EXIST "C:\Program Files\Tyler Technologies\" echo Tyler is not Installed!! Proceeding to reinstall...
 TIMEOUT /T 5 /NOBREAK > NUL
 IF NOT EXIST "C:\Program Files\Tyler Technologies\" GOTO :install
-echo Stopping DrIncode Service...
-NET STOP NGS_DoctorIncodeService
-echo.
-echo.
+call :stopservice_1
 echo Removing TPS Applications Folder...
 RD /S /Q "C:\Program Files\Tyler Technologies\DrIncode\Applications\"
 echo.
@@ -108,7 +146,7 @@ echo.
 echo.
 :repair_2
 echo Installing DrIncode Service...
-"C:\Program Files\Tyler Technologies\DrIncode\InstallUtil\DynamicInstallUtil.exe" -n "NGS_DoctorIncodeService" -d "C:\Program Files\Tyler Technologies\DrIncode" -a Foundation.DoctorIncode.WinServiceHost.exe -t User -u %domain%\%username% -p %password%
+"C:\Program Files\Tyler Technologies\DrIncode\InstallUtil\DynamicInstallUtil.exe" -n "NGS_DoctorIncodeService" -d "C:\Program Files\Tyler Technologies\DrIncode" -a Foundation.DoctorIncode.WinServiceHost.exe -t User -u %domain%\%tpsuser% -p %tpspass%
 echo.
 call :bolayer_2
 echo Cleanup...
@@ -123,7 +161,10 @@ echo.
 echo.
 call :firewall_1
 call :permissions_1
-call :startservice
+call :startservice_1
+TIMEOUT /T 10 /NOBREAK > NUL
+call :stopservice_1
+call :startservice_1
 GOTO :EOF
 
 :remove
@@ -178,10 +219,19 @@ echo                                 ^|^|\(^|(^|)^|/^|^|
 pathping 127.0.0.1 -n -q 1 -p 100 > NUL
 echo                        (/ / //  /^|//^|^|^|^|\\  \ \  \ _)
 pathping 127.0.0.1 -n -q 1 -p 100 > NUL
-echo ------------------------------------------------------------------------------
+echo ----------------------------------------------------------------------------------------
 echo.
 echo Nuking Tyler Public Safety Please Wait...
 TIMEOUT /T 5 /NOBREAK > NUL
+echo.
+echo Stopping Services and Programs...
+taskkill /f /im Foundation.DoctorIncode.WinServiceHost.exe
+taskkill /f /im TCILocalServerApp.exe
+taskkill /f /im MobileCADClient.exe
+taskkill /f /im TylerTech.TPS.Mapping.MapClient.exe
+taskkill /f /im "Keyboard Wedge.exe"
+taskkill /f /im TPSClientSetup.exe
+taskkill /f /im AppInstallUtil.exe
 echo.
 echo Stopping DrIncode Service...
 NET STOP NGS_DoctorIncodeService
@@ -222,9 +272,6 @@ echo.
 echo.
 IF EXIST "C:\Program Files\Tyler Technologies\" GOTO nuke_folder
 TIMEOUT /T 3 /NOBREAK > NUL
-echo Removing INCODE ProgramData Folder...
-RD /S /Q "C:\ProgramData\INCODE\"
-echo.
 echo.
 echo Removing Log Files...
 DEL C:\PSProxInstallLog.txt
@@ -238,6 +285,7 @@ echo.
 GOTO :EOF
 
 :install
+IF EXIST "C:\Program Files\Tyler Technologies\" call :remove_1
 echo Is this a new Tyler install? 
 echo.
 set INPUT=
@@ -245,22 +293,22 @@ set /P INPUT=(Y/N): %=%
 IF /I "%INPUT%"=="Y" GOTO install_2
 IF /I "%INPUT%"=="N" GOTO reinstall
 :install_2
-start /wait cmd /c %drincode%
+start /wait cmd /c "%drincode%"
 TIMEOUT /T 30 /NOBREAK > NUL
-call :stopservice
+call :stopservice_1
 TIMEOUT /T 3 /NOBREAK > NUL
 cls
 call :dotnet_2
 call :bolayer_2
 call :firewall_1
-call :startservice
+call :startservice_1
 GOTO end
 
 :reinstall
 IF NOT EXIST "C:\Program Files\Tyler Technologies\" GOTO reinstall_2
 call :remove_1
 :reinstall_2
-xcopy %tps_source% "C:\Program Files\Tyler Technologies" /s /i
+xcopy "%tpssource%" "C:\Program Files\Tyler Technologies" /s /i
 echo.
 echo.
 TIMEOUT /T 3 /NOBREAK > NUL
@@ -268,20 +316,32 @@ TIMEOUT /T 3 /NOBREAK > NUL
 call :dotnet_2
 call :repair_2
 TIMEOUT /T 10 /NOBREAK > NUL
-call :stopservice
-call :startservice
+GOTO end
+
+:restart_drincode
+call :stopservice_1
+call :startservice_1
 GOTO end
 
 :stopservice
+call :stopservice_1
+GOTO end
+:stopservice_1
 echo Stopping DrIncode Service...
-sc stop "NGS_DoctorIncodeService"
+sc.exe stop "NGS_DoctorIncodeService"
+taskkill /f /im Foundation.DoctorIncode.WinServiceHost.exe
 echo.
 echo.
 GOTO :EOF
 
 :startservice
+call :startservice_1
+pause
+GOTO end
+:startservice_1
 echo Starting DrIncode Service...
-sc start "NGS_DoctorIncodeService"
+sc.exe config "NGS_DoctorIncodeService" obj= "%domain%\%tpsuser%" password= "%tpspass%"
+sc.exe start "NGS_DoctorIncodeService"
 echo.
 echo.
 GOTO :EOF
@@ -310,7 +370,7 @@ GOTO ask_2
 :dotnet_3
 echo.
 echo Installing .NET Framework %DotNetVer%...
-%DotNetPath% /passive /promptrestart
+"%DotNetPath%" /passive /promptrestart
 echo.
 echo.
 GOTO :EOF
@@ -336,7 +396,7 @@ IF /I "%INPUT%"=="Y" GOTO :EOF
 IF /I "%INPUT%"=="N" GOTO bolayer_3
 :bolayer_3
 echo Installing PublicSafety BO Layer...
-msiexec.exe /passive /package %PSAppProxyPath%
+msiexec.exe /passive /package "%PSAppProxyPath%"
 echo.
 echo.
 GOTO :EOF
@@ -352,7 +412,7 @@ NET STOP MpsSvc
 echo.
 echo.
 echo Changing Windows Firewall Service Startup to Disabled...
-sc config MpsSvc start= disabled
+sc.exe config MpsSvc start= disabled
 echo.
 echo.
 GOTO :EOF
@@ -392,9 +452,9 @@ FOR /f "delims=" %%M in ('"dir /b /a-d "%BatchDir%*.bat""') do (
 )
 :showmenu
 cls
-echo -------------------------------------------------------------------------------
-echo                                 DC1 SCRIPTS
-echo -------------------------------------------------------------------------------
+echo -----------------------------------------------------------------------------------------
+echo                                  EXTERNAL SCRIPTS
+echo -----------------------------------------------------------------------------------------
 set CHOICE=0
 FOR /L %%I in (1,1,!MAXITEM!) do echo    %%I. !MENUITEM%%I!
 echo.
@@ -417,9 +477,9 @@ GOTO showmenu
 :end
 Setlocal DISABLEDELAYEDEXPANSION
 cls
-echo -------------------------------------------------------------------------------
-echo                                 FINISHED
-echo -------------------------------------------------------------------------------
+echo -----------------------------------------------------------------------------------------
+echo                                      FINISHED
+echo -----------------------------------------------------------------------------------------
 echo.
 echo.
 echo.
