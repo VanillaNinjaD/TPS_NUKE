@@ -1,5 +1,5 @@
 @echo off
-set nuketoolver=v2.0.0.0-beta1
+set nuketoolver=v2.0.0.1-beta1
 
 pushd %~dp0
 set pwd=%~dp0
@@ -48,15 +48,15 @@ set INISTATUS=Not Present
 
 set appserver=**APPSERVER**
 set sqlserver=**SQLSERVER**
-set domain=m**DOMAIN**
+set domain=**DOMAIN**
 set tpsuser=**USERNAME**
 set tpspass=**PASSWORD**
 set tpsver=2016.4.17
-set drincode="DrIncodeClientSetup.exe"
-set tpssource="Tyler Technologies\*"
-set PSAppProxyPath="PSAppProxy.msi"
+set drincode=DrIncodeClientSetup.exe
+set tpssource=Tyler Technologies
+set PSAppProxyPath=PSAppProxy.msi
 set DotNetVer=4.6.2
-set DotNetPath="NDP462-KB3151800-x86-x64-AllOS-ENU.exe"
+set DotNetPath=NDP462-KB3151800-x86-x64-AllOS-ENU.exe
 set BatchDir=scripts\
 set bolayer=PublicSafety BO Layer (Application Proxy)
 set ThirdParty32=Tyler Public Safety - 3rd Party Components
@@ -86,7 +86,7 @@ echo             NUKE_DIR: %cd%
 echo             TPS User: %domain%\%tpsuser%
 echo         Nuke Version: %nuketoolver%
 echo -----------------------------------------------------------------------------------------
-echo       Enter " 1 " --^> TPS Quick Repair (includes options 5, 6, and 7)
+echo       Enter " 1 " --^> TPS Quick Repair (includes options 5 and 7)
 echo       Enter " 2 " -----^> !!! COMPLETELY NUKE TPS FROM ORBIT !!!
 echo       Enter " 3 " --------^> Install TPS (includes option 4, 5, 6 and 7)
 echo       Enter " 4 " ----------^> Install .NET Framework %DotNetVer%
@@ -131,7 +131,7 @@ call :stopservice_1
 echo Removing TPS Applications Folder...
 RD /S /Q "C:\Program Files\Tyler Technologies\DrIncode\Applications\"
 echo.
-call :bolayer_1
+echo.
 echo DrIncode Service Cleanup...
 "C:\Program Files\Tyler Technologies\DrIncode\InstallUtil\DynamicInstallUtil.exe" -uninstall -n NGS_DoctorIncodeService -d "C:\Program Files\Tyler Technologies\DrIncode" -a Foundation.DoctorIncode.WinServiceHost.exe
 echo.
@@ -148,7 +148,7 @@ echo.
 echo Installing DrIncode Service...
 "C:\Program Files\Tyler Technologies\DrIncode\InstallUtil\DynamicInstallUtil.exe" -n "NGS_DoctorIncodeService" -d "C:\Program Files\Tyler Technologies\DrIncode" -a Foundation.DoctorIncode.WinServiceHost.exe -t User -u %domain%\%tpsuser% -p %tpspass%
 echo.
-call :bolayer_2
+echo.
 echo Cleanup...
 RD /S /Q "C:\Program Files\Tyler Technologies\DrIncode\Services\NGS_DoctorIncodeService"
 echo.
@@ -156,14 +156,12 @@ echo.
 echo Deleting Desktop Icons...
 DEL "%PUBLIC%\Desktop\CAD*.lnk"
 DEL "%PUBLIC%\Desktop\RMS*.lnk"
+DEL "%PUBLIC%\Desktop\Mobile CAD*.lnk"
 DEL "%PUBLIC%\Desktop\Mobile Citations*.lnk"
 echo.
 echo.
 call :firewall_1
 call :permissions_1
-call :startservice_1
-TIMEOUT /T 10 /NOBREAK > NUL
-call :stopservice_1
 call :startservice_1
 GOTO :EOF
 
@@ -224,17 +222,9 @@ echo.
 echo Nuking Tyler Public Safety Please Wait...
 TIMEOUT /T 5 /NOBREAK > NUL
 echo.
-echo Stopping Services and Programs...
-taskkill /f /im Foundation.DoctorIncode.WinServiceHost.exe
-taskkill /f /im TCILocalServerApp.exe
-taskkill /f /im MobileCADClient.exe
-taskkill /f /im TylerTech.TPS.Mapping.MapClient.exe
-taskkill /f /im "Keyboard Wedge.exe"
-taskkill /f /im TPSClientSetup.exe
-taskkill /f /im AppInstallUtil.exe
 echo.
 echo Stopping DrIncode Service...
-NET STOP NGS_DoctorIncodeService
+call :stopservice_1
 echo.
 echo.
 echo DrIncode Service Cleanup...
@@ -299,7 +289,6 @@ call :stopservice_1
 TIMEOUT /T 3 /NOBREAK > NUL
 cls
 call :dotnet_2
-call :bolayer_2
 call :firewall_1
 call :startservice_1
 GOTO end
@@ -308,7 +297,7 @@ GOTO end
 IF NOT EXIST "C:\Program Files\Tyler Technologies\" GOTO reinstall_2
 call :remove_1
 :reinstall_2
-xcopy "%tpssource%" "C:\Program Files\Tyler Technologies" /s /i
+xcopy "%tpssource%\*" "C:\Program Files\Tyler Technologies" /s /i
 echo.
 echo.
 TIMEOUT /T 3 /NOBREAK > NUL
@@ -329,7 +318,17 @@ GOTO end
 :stopservice_1
 echo Stopping DrIncode Service...
 sc.exe stop "NGS_DoctorIncodeService"
+echo.
+echo.
+TIMEOUT /T 5 /NOBREAK > NUL
+echo Stopping Services and Programs...
 taskkill /f /im Foundation.DoctorIncode.WinServiceHost.exe
+taskkill /f /im TCILocalServerApp.exe
+taskkill /f /im MobileCADClient.exe
+taskkill /f /im TylerTech.TPS.Mapping.MapClient.exe
+taskkill /f /im "Keyboard Wedge.exe"
+taskkill /f /im TPSClientSetup.exe
+taskkill /f /im AppInstallUtil.exe
 echo.
 echo.
 GOTO :EOF
@@ -388,13 +387,6 @@ echo.
 echo.
 GOTO :EOF
 :bolayer_2
-echo Is this a MobileCAD Machine?
-echo.
-set INPUT=
-set /P INPUT=(Y/N): %=%
-IF /I "%INPUT%"=="Y" GOTO :EOF
-IF /I "%INPUT%"=="N" GOTO bolayer_3
-:bolayer_3
 echo Installing PublicSafety BO Layer...
 msiexec.exe /passive /package "%PSAppProxyPath%"
 echo.
